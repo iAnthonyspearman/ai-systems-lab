@@ -1,5 +1,14 @@
 "use client";
 
+function cleanAiText(value: string) {
+  return value
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*/g, "")
+    .replace(/^-\s+/gm, "• ")
+    .trim();
+}
+
+
 import { useState } from "react";
 
 type Message = {
@@ -549,15 +558,6 @@ export default function Home() {
             >
               {isLoading ? "Thinking..." : "Ask AI Systems Assistant"}
             </button>
-
-            <div className="mt-6 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-5">
-              <p className="text-sm font-semibold text-cyan-300">
-                Latest System Recommendation
-              </p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-white/80">
-                {demoResponse}
-              </p>
-            </div>
           </div>
         </div>
       </section>
