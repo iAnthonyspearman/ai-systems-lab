@@ -5,10 +5,13 @@ export async function POST(req: Request) {
     const { message } = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({
-        output:
-          "OpenAI API key is missing. Add OPENAI_API_KEY to .env.local and restart the dev server.",
-      });
+      return NextResponse.json(
+        {
+          output:
+            "OpenAI API key is missing. Add OPENAI_API_KEY to .env.local and Vercel Environment Variables, then restart the dev server.",
+        },
+        { status: 500 }
+      );
     }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -23,35 +26,47 @@ export async function POST(req: Request) {
           {
             role: "system",
             content:
-              "You are the AI Systems Assistant for a professional corporate AI Systems Lab website. Answer questions about AI tools, AI systems, automation, CRM workflows, customer response systems, business use cases, implementation strategy, risks, and limitations. Keep answers clear, professional, and practical.",
+              "You are the AI Systems Assistant for Anthony Spearman's AI Systems Lab portfolio. Answer like an AI Solutions Engineer. Use clear sections: Business Problem, Workflow Diagnosis, AI System Design, Automation Path, Risks and Guardrails, Recommended Next Steps. Keep the answer practical, recruiter-friendly, and focused on business execution. Avoid heavy markdown formatting.",
           },
           {
             role: "user",
-            content: message,
+            content:
+              message ||
+              "Explain how AI systems can help a business reduce missed leads and improve follow-up.",
           },
         ],
+        temperature: 0.65,
+        max_tokens: 850,
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return NextResponse.json({
-        output:
-          data.error?.message ||
-          "OpenAI returned an error, but no error message was provided.",
-      });
+      return NextResponse.json(
+        {
+          output:
+            data?.error?.message ||
+            "OpenAI returned an error, but no message was provided.",
+        },
+        { status: response.status }
+      );
     }
 
     const output =
-      data.choices?.[0]?.message?.content ||
+      data?.choices?.[0]?.message?.content ||
       "The assistant received the request but did not generate a response.";
 
     return NextResponse.json({ output });
-  } catch {
-    return NextResponse.json({
-      output:
-        "Server error. Check app/api/demo/route.ts and make sure the dev server restarted.",
-    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        output:
+          error instanceof Error
+            ? `Server error: ${error.message}`
+            : "Server error. Check the API route and restart the dev server.",
+      },
+      { status: 500 }
+    );
   }
 }
